@@ -1,0 +1,6 @@
+{
+  "name": "Xplora Play",
+  "description": "Aplikasi baca novel interaktif dengan pilihan cerita bercabang dan multiple endings.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
