@@ -49,8 +49,7 @@ export default function App() {
   // Sync active scene with selected story's stored progress when switching to reader
   const handleStartReading = (storyToRead: Story = selectedStory, targetSceneId?: string) => {
     setSelectedStory(storyToRead);
-    const existingProg = progressMap[storyToRead.id] || getStoredProgress(storyToRead.id, storyToRead.initialSceneId);
-    const sceneToLoad = targetSceneId || existingProg.currentSceneId || storyToRead.initialSceneId;
+    const sceneToLoad = targetSceneId || storyToRead.initialSceneId;
 
     setCurrentSceneId(sceneToLoad);
     setActiveTab('reader');

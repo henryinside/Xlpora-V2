@@ -29,7 +29,7 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({
   onStartReading,
   unlockedEndings
 }) => {
-  const [activeTab, setActiveTab] = useState<'info' | 'characters' | 'endings' | 'reviews'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'characters' | 'reviews'>('info');
   const [userRating, setUserRating] = useState<number>(5);
   const [reviewComment, setReviewComment] = useState<string>('');
   const [reviewsList, setReviewsList] = useState<Review[]>([
@@ -236,17 +236,6 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({
         </button>
 
         <button
-          onClick={() => setActiveTab('endings')}
-          className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'endings'
-              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-              : 'text-stone-400 hover:text-stone-200'
-          }`}
-        >
-          Daftar 4 Endings ({unlockedEndings.length}/4)
-        </button>
-
-        <button
           onClick={() => setActiveTab('reviews')}
           className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
             activeTab === 'reviews'
@@ -265,27 +254,6 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({
           <p className="text-sm text-stone-300 leading-relaxed font-normal">
             {story.synopsis}
           </p>
-
-          <div className="pt-4 border-t border-stone-800 space-y-3">
-            <h4 className="font-semibold text-sm text-amber-300 flex items-center gap-1.5">
-              <GitFork className="w-4 h-4" />
-              Titik Cabang Keputusan Utama:
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="bg-stone-950 p-3 rounded-xl border border-stone-800 space-y-1">
-                <span className="text-amber-400 font-bold block">1. Setelah Bab 2 (Ruang BP)</span>
-                <p className="text-stone-400">Pilihan ke 2a (Bayangkan Memelukku) atau 2b (Realita).</p>
-              </div>
-              <div className="bg-stone-950 p-3 rounded-xl border border-stone-800 space-y-1">
-                <span className="text-rose-400 font-bold block">2. Setelah Bab 7 (Kantor Rektor)</span>
-                <p className="text-stone-400">Pilihan ke 7a (Binal Mode) atau 7b (Penolakan & Histeria).</p>
-              </div>
-              <div className="bg-stone-950 p-3 rounded-xl border border-stone-800 space-y-1">
-                <span className="text-emerald-400 font-bold block">3. Setelah Bab 9 (Lorong Kampus)</span>
-                <p className="text-stone-400">Pilihan ke Ending A, Ending B, Ending C, atau Ending D.</p>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -305,50 +273,6 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {activeTab === 'endings' && (
-        <div className="space-y-4">
-          <div className="bg-stone-900/80 border border-stone-800 rounded-2xl p-4 flex items-center justify-between">
-            <span className="text-xs text-stone-300 font-medium">
-              Koleksi Akhir Cerita (Ending) Terbuka: <strong className="text-amber-400">{unlockedEndings.length} dari 4</strong>
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {endingsList.map((e) => {
-              const isUnlocked = unlockedEndings.includes(e.id) || unlockedEndings.includes(e.code);
-              return (
-                <div
-                  key={e.id}
-                  className={`bg-stone-900 border rounded-2xl p-5 space-y-2 transition-all ${
-                    isUnlocked ? 'border-emerald-500/50 shadow-lg shadow-emerald-950/20' : 'border-stone-800 opacity-80'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-stone-100">{e.name}</span>
-                    {isUnlocked ? (
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Terbuka
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-[11px] font-semibold text-stone-500 bg-stone-800 px-2 py-0.5 rounded-md">
-                        <Lock className="w-3.5 h-3.5" /> Terkunci
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-stone-400 leading-relaxed">{e.desc}</p>
-                  <button
-                    onClick={() => onStartReading(e.id)}
-                    className="text-[11px] font-semibold text-amber-400 hover:underline pt-1 inline-block cursor-pointer"
-                  >
-                    {isUnlocked ? 'Baca Ulang Ending Ini' : 'Coba Jalur Ini'}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
         </div>
       )}
 

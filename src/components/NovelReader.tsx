@@ -98,7 +98,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
   const extraPage = hasMultipleChoices || isEndingScene ? 1 : 0;
   const totalPages = 1 + totalTextPages + extraPage;
 
-  const isChoicePage = hasMultipleChoices && currentPageIndex === totalPages - 1;
+  const isChoicePage = (hasMultipleChoices || isEndingScene) && currentPageIndex === totalPages - 1;
 
   // Track scene history stack
   useEffect(() => {
@@ -492,7 +492,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
             className="text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-full hover:bg-amber-500/30 transition-colors cursor-pointer flex items-center gap-1"
             title="Pilih Bab & Halaman"
           >
-            <span>Hal {currentPageIndex + 1}/{totalPages}</span>
+            <span>{currentPageIndex === 0 ? 'Judul' : `Hal ${currentPageIndex}/${totalPages - 1}`}</span>
           </button>
 
           <button
