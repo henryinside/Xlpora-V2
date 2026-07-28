@@ -6,12 +6,12 @@ export interface PageData {
 }
 
 /**
- * Splits array of paragraphs into pages where each page has at most `maxLinesPerPage` lines (default 10).
+ * Splits array of paragraphs into pages where each page has at most `maxLinesPerPage` lines (default 9).
  * Guarantees that sentences are NEVER split across pages or cut in the middle.
  */
 export function paginateSceneContent(
   paragraphs: string[],
-  maxLinesPerPage: number = 10,
+  maxLinesPerPage: number = 9,
   charsPerLine: number = 48
 ): string[][] {
   if (!paragraphs || paragraphs.length === 0) return [['']];

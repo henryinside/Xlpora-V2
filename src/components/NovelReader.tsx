@@ -82,8 +82,8 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
 
   const scene: Scene = story.scenes[currentSceneId] || story.scenes[story.initialSceneId];
 
-  // Paginate scene text: max 10 lines per page
-  const textPages = paginateSceneContent(scene.content, 10, 48);
+  // Paginate scene text: max 9 lines per page
+  const textPages = paginateSceneContent(scene.content, 9, 48);
   const totalTextPages = textPages.length;
 
   const choices = scene.choices || [];
@@ -117,7 +117,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
     if (pendingLastPageRef.current) {
       pendingLastPageRef.current = false;
       // When going back to a previous chapter, open at the LAST page
-      const textPgs = paginateSceneContent(scene.content, 10, 48);
+      const textPgs = paginateSceneContent(scene.content, 9, 48);
       const hasMultChoices = (scene.choices || []).length > 1;
       const isEnd = Boolean(scene.isEnding);
       const totPages = 1 + textPgs.length + (hasMultChoices || isEnd ? 1 : 0);
@@ -268,7 +268,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
     }
   };
 
-  // Font Size Classes - Default is 16pt as requested
+  // Font Size Classes - Default is 15pt as requested
   const getFontSizeClass = () => {
     switch (readerSettings.fontSize) {
       case 'sm':
@@ -281,7 +281,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
         return 'text-[22pt] leading-[1.65]';
       case 'md':
       default:
-        return 'text-[16pt] leading-[1.65]';
+        return 'text-[15pt] leading-[1.65]';
     }
   };
 
@@ -318,7 +318,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
         if (prevId) {
           const prevScene = story.scenes[prevId];
           if (prevScene) {
-            const prevPgs = paginateSceneContent(prevScene.content, 10, 48);
+            const prevPgs = paginateSceneContent(prevScene.content, 9, 48);
             const hasMult = (prevScene.choices || []).length > 1;
             const isEnd = Boolean(prevScene.isEnding);
             const totP = 1 + prevPgs.length + (hasMult || isEnd ? 1 : 0);
@@ -334,7 +334,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
 
   // Reusable page renderer function for active & underlying pages
   const renderPageContent = (sceneObj: Scene, pageIdx: number, isUnderlying: boolean = false) => {
-    const textPgs = paginateSceneContent(sceneObj.content, 10, 48);
+    const textPgs = paginateSceneContent(sceneObj.content, 9, 48);
     const totalTextPgs = textPgs.length;
     const choicesList = sceneObj.choices || [];
     const hasMultChoices = choicesList.length > 1;
@@ -573,7 +573,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
                 );
               }
 
-              const pgs = paginateSceneContent(targetScene.content, 10, 48);
+              const pgs = paginateSceneContent(targetScene.content, 9, 48);
               const targetChoices = targetScene.choices || [];
               const extraP = targetChoices.length > 1 || targetScene.isEnding ? 1 : 0;
               const totP = 1 + pgs.length + extraP;
@@ -637,7 +637,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
                         : 'text-stone-400'
                     }`}
                   >
-                    {sz === 'md' ? '16pt' : sz}
+                    {sz === 'md' ? '15pt' : sz}
                   </button>
                 ))}
               </div>
