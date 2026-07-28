@@ -6,52 +6,78 @@ export interface PageData {
 }
 
 /**
- * Splits array of paragraphs into pages where each page has between 40 and 70 words.
+ * Splits array of paragraphs into pages where each page has at most `maxLinesPerPage` lines (default 14).
+ * Guarantees that sentences are NEVER split across pages or cut in the middle.
  */
 export function paginateSceneContent(
   paragraphs: string[],
-  minWordsPerPage: number = 40,
-  maxWordsPerPage: number = 60
+  maxLinesPerPage: number = 14,
+  charsPerLine: number = 48
 ): string[][] {
   if (!paragraphs || paragraphs.length === 0) return [['']];
 
-  // Join all paragraphs into a continuous string
-  const fullText = paragraphs.join(' ').trim();
-  if (!fullText) return [['']];
-
-  // Extract all words
-  const words = fullText.split(/\s+/).filter(Boolean);
-  const totalWords = words.length;
-
-  if (totalWords <= maxWordsPerPage) {
-    return [[words.join(' ')]];
-  }
+  // Clean empty paragraphs
+  const cleanParagraphs = paragraphs.map((p) => p.trim()).filter(Boolean);
+  if (cleanParagraphs.length === 0) return [['']];
 
   const pages: string[][] = [];
-  let index = 0;
+  let currentPageParagraphs: string[] = [];
+  let currentLinesOnPage = 0;
 
-  while (index < words.length) {
-    const remaining = words.length - index;
+  for (const para of cleanParagraphs) {
+    // Regex to extract complete sentences without splitting mid-sentence
+    // Matches anything ending in punctuation (.!?…) and optional quotes/parens, followed by space or end
+    const sentences = para.match(/[^.!?…]+[.!?…]+["'”’)]*(?:\s+|$)|[^.!?…]+$/g) || [para];
 
-    if (remaining <= maxWordsPerPage) {
-      // If remaining is less than minWordsPerPage and we already have pages,
-      // balance the last two pages so both are strictly within or close to 40-60
-      if (remaining < minWordsPerPage && pages.length > 0) {
-        const prevPageWords = pages[pages.length - 1][0].split(/\s+/).filter(Boolean);
-        const combined = [...prevPageWords, ...words.slice(index)];
-        const half = Math.ceil(combined.length / 2);
-        pages[pages.length - 1] = [combined.slice(0, half).join(' ')];
-        pages.push([combined.slice(half).join(' ')]);
+    let currentBuildingPara = '';
+
+    for (let i = 0; i < sentences.length; i++) {
+      const rawSentence = sentences[i];
+      const trimmedSentence = rawSentence.trim();
+      if (!trimmedSentence) continue;
+
+      const testPara = currentBuildingPara ? `${currentBuildingPara} ${trimmedSentence}` : trimmedSentence;
+      const testParaLines = Math.max(1, Math.ceil(testPara.length / charsPerLine));
+
+      // Extra line overhead for paragraph gap if this is a new paragraph on the page
+      const paragraphGapOverhead = (currentPageParagraphs.length > 0 && !currentBuildingPara) ? 0.75 : 0;
+
+      const projectedLines = currentLinesOnPage + testParaLines + paragraphGapOverhead;
+
+      if (projectedLines <= maxLinesPerPage) {
+        // Fits in the current page!
+        currentBuildingPara = testPara;
       } else {
-        pages.push([words.slice(index).join(' ')]);
-      }
-      break;
-    }
+        // Does not fit! Commit accumulated paragraph to current page
+        if (currentBuildingPara) {
+          currentPageParagraphs.push(currentBuildingPara);
+          currentBuildingPara = '';
+        }
 
-    // Standard chunk size: 50 words (right in the middle of 40-60)
-    const chunkSize = 50;
-    pages.push([words.slice(index, index + chunkSize).join(' ')]);
-    index += chunkSize;
+        // Push current page to pages array if it has content
+        if (currentPageParagraphs.length > 0) {
+          pages.push(currentPageParagraphs);
+          currentPageParagraphs = [];
+          currentLinesOnPage = 0;
+        }
+
+        // Start new page with current sentence
+        currentBuildingPara = trimmedSentence;
+      }
+
+      // If this is the last sentence of the paragraph, finalize `currentBuildingPara` into `currentPageParagraphs`
+      if (i === sentences.length - 1 && currentBuildingPara) {
+        const finalParaLines = Math.max(1, Math.ceil(currentBuildingPara.length / charsPerLine));
+        const gap = currentPageParagraphs.length > 0 ? 0.75 : 0;
+        currentPageParagraphs.push(currentBuildingPara);
+        currentLinesOnPage += finalParaLines + gap;
+        currentBuildingPara = '';
+      }
+    }
+  }
+
+  if (currentPageParagraphs.length > 0) {
+    pages.push(currentPageParagraphs);
   }
 
   return pages.length > 0 ? pages : [['']];

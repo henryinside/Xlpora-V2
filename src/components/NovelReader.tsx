@@ -8,7 +8,9 @@ import {
   Bookmark,
   ChevronRight,
   Trophy,
-  X
+  X,
+  Lock,
+  BookOpen
 } from 'lucide-react';
 
 interface NovelReaderProps {
@@ -22,6 +24,35 @@ interface NovelReaderProps {
   isBookmarked: boolean;
   onToggleBookmark: () => void;
 }
+
+/**
+ * Check if a scene/chapter should be locked in the Chapter Picker dropdown.
+ * Locks Bab 2a, 2b, 7a, 7b, and all Ending scenes.
+ */
+export const isSceneLocked = (sId: string, sceneObj?: Scene): boolean => {
+  if (!sId) return false;
+  const idLower = sId.toLowerCase();
+
+  // Branch scenes 2a, 2b, 7a, 7b
+  const isBranchLocked =
+    idLower === 'scene-2a' ||
+    idLower === 'scene-2b' ||
+    idLower === 'scene-7a' ||
+    idLower === 'scene-7b' ||
+    idLower === '2a' ||
+    idLower === '2b' ||
+    idLower === '7a' ||
+    idLower === '7b' ||
+    idLower.endsWith('2a') ||
+    idLower.endsWith('2b') ||
+    idLower.endsWith('7a') ||
+    idLower.endsWith('7b');
+
+  // All ending scenes
+  const isEndingLocked = Boolean(sceneObj?.isEnding) || idLower.includes('ending');
+
+  return isBranchLocked || isEndingLocked;
+};
 
 export const NovelReader: React.FC<NovelReaderProps> = ({
   story,
@@ -51,8 +82,8 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
 
   const scene: Scene = story.scenes[currentSceneId] || story.scenes[story.initialSceneId];
 
-  // Paginate scene text: 40 - 60 words per page
-  const textPages = paginateSceneContent(scene.content, 40, 60);
+  // Paginate scene text: max 14 lines per page
+  const textPages = paginateSceneContent(scene.content, 14, 48);
   const totalTextPages = textPages.length;
 
   const choices = scene.choices || [];
@@ -60,10 +91,14 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
   const isSingleChoice = choices.length === 1;
   const isEndingScene = Boolean(scene.isEnding);
 
-  // Total pages in scene:
-  // Add 1 extra page ONLY if there are multiple choices OR it's an ending scene
+  // Page structure:
+  // Page 0 = Standalone Chapter Title Page
+  // Page 1..totalTextPages = Text Pages
+  // Final Page (if choices > 1 or ending) = Choice or Ending Page
   const extraPage = hasMultipleChoices || isEndingScene ? 1 : 0;
-  const totalPages = totalTextPages + extraPage;
+  const totalPages = 1 + totalTextPages + extraPage;
+
+  const isChoicePage = hasMultipleChoices && currentPageIndex === totalPages - 1;
 
   // Track scene history stack
   useEffect(() => {
@@ -81,11 +116,11 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
   useEffect(() => {
     if (pendingLastPageRef.current) {
       pendingLastPageRef.current = false;
-      // When going back to a previous chapter/Bab, open at the LAST page
-      const textPgs = paginateSceneContent(scene.content, 40, 60);
+      // When going back to a previous chapter, open at the LAST page
+      const textPgs = paginateSceneContent(scene.content, 14, 48);
       const hasMultChoices = (scene.choices || []).length > 1;
       const isEnd = Boolean(scene.isEnding);
-      const totPages = textPgs.length + (hasMultChoices || isEnd ? 1 : 0);
+      const totPages = 1 + textPgs.length + (hasMultChoices || isEnd ? 1 : 0);
       setCurrentPageIndex(Math.max(0, totPages - 1));
     } else {
       setCurrentPageIndex(0);
@@ -119,7 +154,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
   };
 
   const handleNextPage = async () => {
-    if (isTransitioningRef.current) return;
+    if (isTransitioningRef.current || isChoicePage) return;
 
     const hasNextPage = currentPageIndex < totalPages - 1;
     const hasNextScene = currentPageIndex === totalPages - 1 && isSingleChoice;
@@ -189,6 +224,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
   // Keyboard navigation (Left/Right arrow keys)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isChoicePage) return; // Disable keyboard page advance on choice page
       if (e.key === 'ArrowRight' || e.key === 'Space') {
         handleNextPage();
       } else if (e.key === 'ArrowLeft') {
@@ -197,7 +233,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPageIndex, totalPages, isSingleChoice, choices, currentSceneId]);
+  }, [currentPageIndex, totalPages, isSingleChoice, choices, currentSceneId, isChoicePage]);
 
   // Immediate choice selection for multiple choices
   const handleSelectChoiceDirectly = async (choice: StoryChoice) => {
@@ -236,16 +272,16 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
   const getFontSizeClass = () => {
     switch (readerSettings.fontSize) {
       case 'sm':
-        return 'text-[14pt] leading-relaxed';
+        return 'text-[14pt] leading-[1.65]';
       case 'lg':
-        return 'text-[18pt] leading-relaxed';
+        return 'text-[18pt] leading-[1.65]';
       case 'xl':
-        return 'text-[20pt] leading-relaxed';
+        return 'text-[20pt] leading-[1.65]';
       case '2xl':
-        return 'text-[22pt] leading-relaxed';
+        return 'text-[22pt] leading-[1.65]';
       case 'md':
       default:
-        return 'text-[16pt] leading-relaxed';
+        return 'text-[16pt] leading-[1.65]';
     }
   };
 
@@ -282,10 +318,10 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
         if (prevId) {
           const prevScene = story.scenes[prevId];
           if (prevScene) {
-            const prevPgs = paginateSceneContent(prevScene.content, 40, 60);
+            const prevPgs = paginateSceneContent(prevScene.content, 14, 48);
             const hasMult = (prevScene.choices || []).length > 1;
             const isEnd = Boolean(prevScene.isEnding);
-            const totP = prevPgs.length + (hasMult || isEnd ? 1 : 0);
+            const totP = 1 + prevPgs.length + (hasMult || isEnd ? 1 : 0);
             return { sceneObj: prevScene, pageIdx: Math.max(0, totP - 1) };
           }
         }
@@ -298,62 +334,88 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
 
   // Reusable page renderer function for active & underlying pages
   const renderPageContent = (sceneObj: Scene, pageIdx: number, isUnderlying: boolean = false) => {
-    const textPgs = paginateSceneContent(sceneObj.content, 40, 60);
+    const textPgs = paginateSceneContent(sceneObj.content, 14, 48);
     const totalTextPgs = textPgs.length;
     const choicesList = sceneObj.choices || [];
     const hasMultChoices = choicesList.length > 1;
     const isEndScene = Boolean(sceneObj.isEnding);
-    const totPgs = totalTextPgs + (hasMultChoices || isEndScene ? 1 : 0);
+    const totPgs = 1 + totalTextPgs + (hasMultChoices || isEndScene ? 1 : 0);
 
     if (pageIdx < 0 || pageIdx >= totPgs) return null;
 
-    const isTextP = pageIdx < totalTextPgs;
+    const isTitleP = pageIdx === 0;
+    const isTextP = pageIdx >= 1 && pageIdx <= totalTextPgs;
     const isChoiceP = hasMultChoices && pageIdx === totPgs - 1;
     const isEndP = isEndScene && pageIdx === totPgs - 1;
-    const paras = isTextP ? textPgs[pageIdx] : [];
+    const textParaIndex = isTextP ? pageIdx - 1 : 0;
+    const paras = isTextP ? textPgs[textParaIndex] || [] : [];
 
     return (
-      <div className={`w-full h-full flex flex-col justify-center px-4 py-3 select-none ${getThemeClasses()} ${
-        isUnderlying ? 'pointer-events-none' : ''
-      }`}>
-        {/* Chapter title on page 0 */}
-        {pageIdx === 0 && (
-          <div className="text-center pb-2">
-            <h2 className="text-base font-extrabold tracking-tight mt-1 opacity-90">
-              {sceneObj.title}
-            </h2>
+      <div
+        className={`w-full h-full flex flex-col justify-center px-6 py-6 select-none ${getThemeClasses()} ${
+          isUnderlying ? 'pointer-events-none' : ''
+        }`}
+      >
+        {/* Page 0: Standalone Dedicated Chapter Title Page */}
+        {isTitleP && (
+          <div className="w-full h-full flex flex-col items-center justify-center text-center my-auto px-4 py-8 space-y-6">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-xl">
+              <BookOpen className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-amber-400/90 block">
+                {sceneObj.chapterNumber ? `Bab ${sceneObj.chapterNumber}` : 'Halaman Judul'}
+              </span>
+
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-100 tracking-tight leading-snug max-w-sm mx-auto">
+                {sceneObj.title}
+              </h1>
+            </div>
+
+            <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto opacity-80" />
+
+            <p className="text-xs text-stone-400 font-medium animate-pulse">
+              Geser / Ketuk layar untuk mulai membaca &rarr;
+            </p>
           </div>
         )}
 
-        {/* Text Paragraphs */}
+        {/* Text Paragraphs Page */}
         {isTextP && (
-          <div className={`space-y-3.5 ${getFontSizeClass()} ${getFontFamilyClass()} tracking-normal transition-all duration-200`}>
+          <div
+            className={`space-y-3 ${getFontSizeClass()} ${getFontFamilyClass()} tracking-normal transition-all duration-200 my-auto`}
+          >
             {paras.map((para, idx) => (
-              <p key={idx} className="opacity-95 leading-relaxed">
+              <p key={idx} className="indent-6 text-justify opacity-95 leading-[1.65]">
                 {para}
               </p>
             ))}
           </div>
         )}
 
-        {/* Choice Selection Page */}
+        {/* Choice Selection Page (Swipe Disabled!) */}
         {isChoiceP && (
-          <div className="space-y-4 text-center my-auto">
-            <div className="space-y-1">
+          <div className="space-y-4 text-center my-auto w-full max-w-md mx-auto">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold">
+                <Lock className="w-3 h-3" />
+                <span>Halaman Pilihan — Swipe Dinonaktifkan</span>
+              </div>
               <h3 className="text-base font-bold text-stone-100">
                 Pilih Langkah Irene Selanjutnya:
               </h3>
               <p className="text-[11px] text-stone-400">
-                Sentuh pilihan di bawah untuk langsung berpindah ke alur cerita
+                Sentuh salah satu pilihan di bawah untuk melanjutkan alur cerita
               </p>
             </div>
 
-            <div className="space-y-2.5 pt-1 text-left">
+            <div className="space-y-2.5 pt-2 text-left">
               {choicesList.map((choice) => (
                 <button
                   key={choice.id}
                   onClick={() => !isUnderlying && handleSelectChoiceDirectly(choice)}
-                  className="w-full p-3.5 rounded-2xl bg-stone-900/90 border-2 border-stone-800 hover:border-amber-500 hover:bg-stone-850 transition-all cursor-pointer flex items-center justify-between gap-3 text-left group active:scale-[0.98]"
+                  className="w-full p-4 rounded-2xl bg-stone-900/95 border-2 border-stone-800 hover:border-amber-500 hover:bg-stone-850 transition-all cursor-pointer flex items-center justify-between gap-3 text-left group active:scale-[0.98] shadow-lg"
                 >
                   <div className="space-y-0.5">
                     <h4 className="font-bold text-xs text-stone-100 group-hover:text-amber-300 transition-colors">
@@ -365,7 +427,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
                       </p>
                     )}
                   </div>
-                  <div className="shrink-0 w-6 h-6 rounded-full border border-stone-700 group-hover:border-amber-400 group-hover:bg-amber-400 flex items-center justify-center transition-colors">
+                  <div className="shrink-0 w-7 h-7 rounded-full border border-stone-700 group-hover:border-amber-400 group-hover:bg-amber-400 flex items-center justify-center transition-colors">
                     <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-950" />
                   </div>
                 </button>
@@ -471,29 +533,54 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
               </button>
             </div>
 
-            {/* Select Bab */}
+            {/* Select Bab (Locked Bab 2a, 2b, 7a, 7b & Endings) */}
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-stone-400 block">Pilih Bab:</label>
               <select
                 value={selectedPickerSceneId}
-                onChange={(e) => setSelectedPickerSceneId(e.target.value)}
+                onChange={(e) => {
+                  const newId = e.target.value;
+                  const sObj = story.scenes[newId];
+                  if (!isSceneLocked(newId, sObj) || newId === currentSceneId) {
+                    setSelectedPickerSceneId(newId);
+                  }
+                }}
                 className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-stone-200 focus:outline-none focus:border-amber-500 cursor-pointer"
               >
-                {(Object.values(story.scenes) as Scene[]).map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.title}
-                  </option>
-                ))}
+                {(Object.values(story.scenes) as Scene[]).map((s) => {
+                  const locked = isSceneLocked(s.id, s) && s.id !== currentSceneId;
+                  return (
+                    <option key={s.id} value={s.id} disabled={locked}>
+                      {s.title} {locked ? '🔒 (Terkunci)' : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
-            {/* Select Page Grid */}
+            {/* Select Page Grid or Locked Alert */}
             {(() => {
               const targetScene = story.scenes[selectedPickerSceneId] || scene;
-              const pgs = paginateSceneContent(targetScene.content, 40, 60);
+              const isTargetLocked = isSceneLocked(selectedPickerSceneId, targetScene) && selectedPickerSceneId !== currentSceneId;
+
+              if (isTargetLocked) {
+                return (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center space-y-1">
+                    <div className="flex items-center justify-center gap-1.5 text-amber-400 font-bold text-xs">
+                      <Lock className="w-4 h-4" />
+                      <span>Bab Terkunci</span>
+                    </div>
+                    <p className="text-[10px] text-stone-400 leading-relaxed">
+                      Bab cabang (2a, 2b, 7a, 7b) dan Bab Ending tidak dapat dipilih langsung. Kamu harus memainkannya melalui pilihan cerita.
+                    </p>
+                  </div>
+                );
+              }
+
+              const pgs = paginateSceneContent(targetScene.content, 14, 48);
               const targetChoices = targetScene.choices || [];
               const extraP = targetChoices.length > 1 || targetScene.isEnding ? 1 : 0;
-              const totP = pgs.length + extraP;
+              const totP = 1 + pgs.length + extraP;
 
               return (
                 <div className="space-y-1.5">
@@ -515,7 +602,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
                             : 'bg-stone-950 text-stone-300 border-stone-800 hover:border-amber-500/50'
                         }`}
                       >
-                        {i + 1}
+                        {i === 0 ? 'Judul' : i}
                       </button>
                     ))}
                   </div>
@@ -598,16 +685,18 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
         {/* Top Active Page Card (Sliding layer with drop shadow on sides) */}
         <motion.div
           animate={controls}
-          drag="x"
+          drag={isChoicePage ? false : 'x'}
           dragConstraints={{ left: 0, right: 0 }}
           dragSnapToOrigin={false}
           dragElastic={0.6}
           onDrag={(event, info) => {
+            if (isChoicePage) return;
             setDragOffset(info.offset.x);
             if (info.offset.x < -5) setPeekDirection('next');
             else if (info.offset.x > 5) setPeekDirection('prev');
           }}
           onDragEnd={async (event, info) => {
+            if (isChoicePage) return;
             const offset = info.offset.x;
             const velocity = info.velocity.x;
 
@@ -625,7 +714,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
             }
           }}
           onTap={(event, info) => {
-            if (isTransitioningRef.current) return;
+            if (isTransitioningRef.current || isChoicePage) return;
             const clientX = info.point.x;
             if (clientX < window.innerWidth * 0.35) {
               handlePrevPage();
@@ -633,7 +722,9 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
               handleNextPage();
             }
           }}
-          className={`absolute inset-0 z-10 w-full h-full flex flex-col justify-center cursor-grab active:cursor-grabbing touch-pan-y select-none shadow-[-20px_0_35px_rgba(0,0,0,0.65),20px_0_35px_rgba(0,0,0,0.65)] ${getThemeClasses()}`}
+          className={`absolute inset-0 z-10 w-full h-full flex flex-col justify-center ${
+            isChoicePage ? 'cursor-default' : 'cursor-grab active:cursor-grabbing touch-pan-y'
+          } select-none shadow-[-20px_0_35px_rgba(0,0,0,0.65),20px_0_35px_rgba(0,0,0,0.65)] ${getThemeClasses()}`}
         >
           {renderPageContent(scene, currentPageIndex, false)}
         </motion.div>
