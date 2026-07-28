@@ -9,6 +9,7 @@ interface HomeFeedProps {
   onSelectStory: (story: Story) => void;
   onStartReading: (story: Story) => void;
   unlockedEndingsCount: number;
+  storyProgressMap?: Record<string, { unlockedEndings: string[] }>;
 }
 
 export const HomeFeed: React.FC<HomeFeedProps> = ({
@@ -16,7 +17,8 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
   allStories,
   onSelectStory,
   onStartReading,
-  unlockedEndingsCount
+  unlockedEndingsCount,
+  storyProgressMap
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
 
@@ -146,7 +148,7 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
               key={story.id}
               story={story}
               onSelect={onSelectStory}
-              unlockedEndingsCount={story.id === 'gairah-irene' ? unlockedEndingsCount : 0}
+              unlockedEndingsCount={storyProgressMap?.[story.id]?.unlockedEndings.length || 0}
             />
           ))}
         </div>

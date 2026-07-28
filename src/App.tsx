@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Story, ReaderSettings, UserProgress } from './types';
 import { gairahIreneStory } from './data/storyGairahIrene';
+import { kadoTerlarangStory } from './data/storyKadoTerlarang';
 import { dummyStories } from './data/dummyStories';
 import {
   getStoredSettings,
@@ -18,7 +19,7 @@ import { NovelReader } from './components/NovelReader';
 import { LibraryView } from './components/LibraryView';
 
 export default function App() {
-  const allStories = [gairahIreneStory, ...dummyStories];
+  const allStories = [gairahIreneStory, kadoTerlarangStory, ...dummyStories];
 
   const [activeTab, setActiveTab] = useState<'home' | 'library' | 'detail' | 'reader'>('home');
   const [selectedStory, setSelectedStory] = useState<Story>(gairahIreneStory);
@@ -131,6 +132,7 @@ export default function App() {
               }}
               onStartReading={(s) => handleStartReading(s)}
               unlockedEndingsCount={ireneProgress.unlockedEndings.length}
+              storyProgressMap={progressMap}
             />
           </div>
         )}
@@ -141,7 +143,7 @@ export default function App() {
               story={selectedStory}
               onBack={() => setActiveTab('home')}
               onStartReading={(sceneId) => handleStartReading(selectedStory, sceneId)}
-              unlockedEndings={ireneProgress.unlockedEndings}
+              unlockedEndings={progressMap[selectedStory.id]?.unlockedEndings || []}
             />
           </div>
         )}
