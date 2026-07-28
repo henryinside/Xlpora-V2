@@ -82,8 +82,8 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
 
   const scene: Scene = story.scenes[currentSceneId] || story.scenes[story.initialSceneId];
 
-  // Paginate scene text: max 14 lines per page
-  const textPages = paginateSceneContent(scene.content, 14, 48);
+  // Paginate scene text: max 10 lines per page
+  const textPages = paginateSceneContent(scene.content, 10, 48);
   const totalTextPages = textPages.length;
 
   const choices = scene.choices || [];
@@ -117,7 +117,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
     if (pendingLastPageRef.current) {
       pendingLastPageRef.current = false;
       // When going back to a previous chapter, open at the LAST page
-      const textPgs = paginateSceneContent(scene.content, 14, 48);
+      const textPgs = paginateSceneContent(scene.content, 10, 48);
       const hasMultChoices = (scene.choices || []).length > 1;
       const isEnd = Boolean(scene.isEnding);
       const totPages = 1 + textPgs.length + (hasMultChoices || isEnd ? 1 : 0);
@@ -318,7 +318,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
         if (prevId) {
           const prevScene = story.scenes[prevId];
           if (prevScene) {
-            const prevPgs = paginateSceneContent(prevScene.content, 14, 48);
+            const prevPgs = paginateSceneContent(prevScene.content, 10, 48);
             const hasMult = (prevScene.choices || []).length > 1;
             const isEnd = Boolean(prevScene.isEnding);
             const totP = 1 + prevPgs.length + (hasMult || isEnd ? 1 : 0);
@@ -334,7 +334,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
 
   // Reusable page renderer function for active & underlying pages
   const renderPageContent = (sceneObj: Scene, pageIdx: number, isUnderlying: boolean = false) => {
-    const textPgs = paginateSceneContent(sceneObj.content, 14, 48);
+    const textPgs = paginateSceneContent(sceneObj.content, 10, 48);
     const totalTextPgs = textPgs.length;
     const choicesList = sceneObj.choices || [];
     const hasMultChoices = choicesList.length > 1;
@@ -387,7 +387,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
             className={`space-y-3 ${getFontSizeClass()} ${getFontFamilyClass()} tracking-normal transition-all duration-200 my-auto`}
           >
             {paras.map((para, idx) => (
-              <p key={idx} className="indent-6 text-justify opacity-95 leading-[1.65]">
+              <p key={idx} className="indent-6 text-left opacity-95 leading-[1.65]">
                 {para}
               </p>
             ))}
@@ -398,10 +398,6 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
         {isChoiceP && (
           <div className="space-y-4 text-center my-auto w-full max-w-md mx-auto">
             <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold">
-                <Lock className="w-3 h-3" />
-                <span>Halaman Pilihan — Swipe Dinonaktifkan</span>
-              </div>
               <h3 className="text-base font-bold text-stone-100">
                 Pilih Langkah Irene Selanjutnya:
               </h3>
@@ -577,7 +573,7 @@ export const NovelReader: React.FC<NovelReaderProps> = ({
                 );
               }
 
-              const pgs = paginateSceneContent(targetScene.content, 14, 48);
+              const pgs = paginateSceneContent(targetScene.content, 10, 48);
               const targetChoices = targetScene.choices || [];
               const extraP = targetChoices.length > 1 || targetScene.isEnding ? 1 : 0;
               const totP = 1 + pgs.length + extraP;
