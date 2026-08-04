@@ -4,7 +4,7 @@ export const kadoTerlarangStory: Story = {
   id: 'kado-terlarang',
   title: 'Kado Terlarang',
   author: 'Erlina S. & Xplora Studio',
-  coverImage: '/src/assets/images/kado_terlarang_cover_1785211798785.jpg',
+  coverImage: 'https://i.ibb.co.com/8gJ2kHs0/Screenshot-20260207-092455.jpg',
   synopsis:
     'Erlina (19) tinggal bersama ibunya dalam kesepian setelah duka panjang. Ketika ibunya menikah lagi dengan Om Rudi, kehangatan dan ketegangan rahasia terjalin di antara mereka. Di balik badai hujan, kado ulang tahun gaun sutra nude pink, dan pertemuan di rumah kosong, Erlina dihadapkan pada pilihan antara batas moral atau api asmara.',
   category: 'Romance',

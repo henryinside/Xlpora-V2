@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Story, ReaderSettings, UserProgress } from './types';
 import { gairahIreneStory } from './data/storyGairahIrene';
+import { labirinSekteStory } from './data/storyLabirinSekteSesat';
 import { kadoTerlarangStory } from './data/storyKadoTerlarang';
 import { dummyStories } from './data/dummyStories';
 import {
@@ -19,11 +20,11 @@ import { NovelReader } from './components/NovelReader';
 import { LibraryView } from './components/LibraryView';
 
 export default function App() {
-  const allStories = [gairahIreneStory, kadoTerlarangStory, ...dummyStories];
+  const allStories = [gairahIreneStory, labirinSekteStory, kadoTerlarangStory, ...dummyStories];
 
   const [activeTab, setActiveTab] = useState<'home' | 'library' | 'detail' | 'reader'>('home');
   const [selectedStory, setSelectedStory] = useState<Story>(gairahIreneStory);
-  const [currentSceneId, setCurrentSceneId] = useState<string>('scene-1');
+  const [currentSceneId, setCurrentSceneId] = useState<string>(gairahIreneStory.initialSceneId);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const [readerSettings, setReaderSettings] = useState<ReaderSettings>(getStoredSettings());
@@ -38,11 +39,11 @@ export default function App() {
     return map;
   });
 
-  const ireneProgress = progressMap['gairah-irene'] || {
-    storyId: 'gairah-irene',
-    currentSceneId: 'scene-1',
+  const selectedProgress = progressMap[selectedStory.id] || {
+    storyId: selectedStory.id,
+    currentSceneId: selectedStory.initialSceneId,
     unlockedEndings: [],
-    visitedScenes: ['scene-1'],
+    visitedScenes: [selectedStory.initialSceneId],
     choiceHistory: {},
     lastReadTime: Date.now()
   };
@@ -115,7 +116,7 @@ export default function App() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           activeStoryTitle={selectedStory.title}
-          unlockedEndingsCount={ireneProgress.unlockedEndings.length}
+          unlockedEndingsCount={selectedProgress.unlockedEndings.length}
         />
       )}
 
@@ -131,7 +132,7 @@ export default function App() {
                 setActiveTab('detail');
               }}
               onStartReading={(s) => handleStartReading(s)}
-              unlockedEndingsCount={ireneProgress.unlockedEndings.length}
+              unlockedEndingsCount={progressMap[gairahIreneStory.id]?.unlockedEndings.length || 0}
               storyProgressMap={progressMap}
             />
           </div>
@@ -169,7 +170,7 @@ export default function App() {
             currentSceneId={currentSceneId}
             onSceneChange={handleSceneChange}
             onBackToDetail={() => setActiveTab('detail')}
-            unlockedEndings={ireneProgress.unlockedEndings}
+            unlockedEndings={selectedProgress.unlockedEndings}
             readerSettings={readerSettings}
             onUpdateSettings={handleUpdateSettings}
             isBookmarked={bookmarkedStoryIds.includes(selectedStory.id)}

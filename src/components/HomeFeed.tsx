@@ -58,7 +58,7 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
             </span>
             <span className="flex items-center gap-1 text-xs text-amber-300 font-semibold px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full">
               <GitFork className="w-3.5 h-3.5" />
-              4 Ending Bercabang
+              {featuredStory.totalEndings || 2} Ending Bercabang
             </span>
           </div>
 
@@ -70,20 +70,14 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
             {featuredStory.synopsis}
           </p>
 
-          {/* Interactive Choices Preview Pills */}
-          <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center gap-2 bg-stone-900/80 border border-stone-800 px-3 py-2 rounded-xl text-stone-300">
-              <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
-              <span>Bab 2: Bayangkan Memelukku vs Realita</span>
-            </div>
-            <div className="flex items-center gap-2 bg-stone-900/80 border border-stone-800 px-3 py-2 rounded-xl text-stone-300">
-              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-              <span>Bab 7: Binal Mode vs Penolakan</span>
-            </div>
-            <div className="flex items-center gap-2 bg-stone-900/80 border border-stone-800 px-3 py-2 rounded-xl text-stone-300 sm:col-span-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-              <span>Bab 9: Tentukan Takdir (Ending A, B, C, atau D)</span>
-            </div>
+          {/* Interactive Tags */}
+          <div className="pt-2 flex flex-wrap gap-2 text-xs">
+            {featuredStory.tags.map((tag) => (
+              <span key={tag} className="flex items-center gap-1.5 bg-stone-900/80 border border-stone-800 px-3 py-1.5 rounded-xl text-stone-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <span>{tag}</span>
+              </span>
+            ))}
           </div>
 
           {/* Action Buttons */}
@@ -108,7 +102,7 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
           {unlockedEndingsCount > 0 && (
             <div className="pt-2 flex items-center gap-2 text-xs text-amber-300">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Kamu telah membuka <strong>{unlockedEndingsCount} dari 4 Ending</strong>! Coba cabang lain untuk koleksi lengkap.</span>
+              <span>Kamu telah membuka <strong>{unlockedEndingsCount} dari {featuredStory.totalEndings || 2} Ending</strong>! Coba cabang lain untuk koleksi lengkap.</span>
             </div>
           )}
         </div>
